@@ -116,7 +116,7 @@
         <input type="text" id="chatbot-input" placeholder="اكتب رسالتك هنا..." />
         <button id="chatbot-send">إرسال</button>
       </div>
-    </div>
+  </div>
   `;
   document.body.appendChild(container);
 
@@ -140,9 +140,10 @@
     messages.scrollTop = messages.scrollHeight;
 
     try {
-      // قراءة الـ client من الرابط بوضوح
       const clientId = 'marrakech_restaurant';
-      const res = await fetch('/api/chat', {
+      
+      // الاتصال المباشر بسيرفر Railway
+      const res = await fetch('https://chatbot-widget-production-fa1d.up.railway.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

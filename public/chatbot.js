@@ -141,8 +141,8 @@
 
     try {
       // قراءة الـ client من الرابط بوضوح
-      const clientId = 'marrakech_restaurant';
-
+      const urlParams = new URLSearchParams(window.location.search);
+const clientId = urlParams.get('client') || 'default';
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -1,169 +1,170 @@
-window.addEventListener('DOMContentLoaded', () => {
-  // 1. إنشاء الحاوية الرئيسية
-  const widgetContainer = document.createElement('div');
-  widgetContainer.id = 'ai-chatbot-widget';
-  
-  widgetContainer.innerHTML = `
-    <style>
-      #ai-chat-button {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        background-color: #0070f3;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        font-size: 26px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      #ai-chat-box {
-        display: none;
-        position: fixed;
-        bottom: 95px;
-        right: 25px;
-        width: 340px;
-        height: 450px;
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 999999;
-        font-family: Segoe UI, Tahoma, sans-serif;
-        direction: rtl;
-      }
-      #ai-chat-header {
-        background: #0070f3;
-        color: white;
-        padding: 15px;
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      #ai-chat-messages {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        background: #f9f9f9;
-      }
-      .ai-msg {
-        padding: 10px 14px;
-        border-radius: 10px;
-        max-width: 80%;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-      .ai-msg.user {
-        background: #0070f3;
-        color: white;
-        align-self: flex-start;
-      }
-      .ai-msg.bot {
-        background: #e9ecef;
-        color: #212529;
-        align-self: flex-end;
-      }
-      #ai-chat-input-area {
-        display: flex;
-        border-top: 1px solid #eee;
-        background: white;
-      }
-      #ai-chat-input {
-        flex: 1;
-        border: none;
-        padding: 12px 15px;
-        outline: none;
-        font-size: 14px;
-      }
-      #ai-chat-send {
-        background: #0070f3;
-        color: white;
-        border: none;
-        padding: 0 18px;
-        cursor: pointer;
-        font-weight: bold;
-      }
-    </style>
+// إنشاء وتصميم نافذة الشات في الصفحة تلقائياً
+(function () {
+  const styles = `
+    #chatbot-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999999;
+      font-family: Tahoma, sans-serif;
+      direction: rtl;
+    }
+    #chatbot-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #chatbot-box {
+      display: none;
+      width: 320px;
+      height: 400px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      flex-direction: column;
+      overflow: hidden;
+      position: absolute;
+      bottom: 60px;
+      right: 0;
+    }
+    #chatbot-header {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #chatbot-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #chatbot-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chat-msg {
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 80%;
+      line-height: 1.4;
+    }
+    .user-msg {
+      background: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .bot-msg {
+      background: #f1f1f1;
+      color: #333;
+      align-self: flex-start;
+    }
+    #chatbot-input-area {
+      display: flex;
+      border-top: 1px solid #ddd;
+      padding: 8px;
+      background: #fff;
+    }
+    #chatbot-input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px;
+      outline: none;
+    }
+    #chatbot-send {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin-right: 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  `;
 
-    <button id="ai-chat-button">💬</button>
-    
-    <div id="ai-chat-box">
-      <div id="ai-chat-header">
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
+
+  const container = document.createElement("div");
+  container.id = "chatbot-container";
+  container.innerHTML = `
+    <button id="chatbot-btn">💬 المساعد الذكي</button>
+    <div id="chatbot-box">
+      <div id="chatbot-header">
         <span>المساعد الذكي</span>
-        <span id="ai-chat-close" style="cursor:pointer; font-size: 20px;">&times;</span>
+        <button id="chatbot-close">✕</button>
       </div>
-      <div id="ai-chat-messages">
-        <div class="ai-msg bot">مرحباً بك! كيف يمكنني مساعدتك اليوم؟</div>
+      <div id="chatbot-messages">
+        <div class="chat-msg bot-msg">مرحباً بك! كيف يمكنني مساعدتك اليوم؟</div>
       </div>
-      <div id="ai-chat-input-area">
-        <input type="text" id="ai-chat-input" placeholder="اكتب رسالتك هنا..." />
-        <button id="ai-chat-send">إرسال</button>
+      <div id="chatbot-input-area">
+        <input type="text" id="chatbot-input" placeholder="اكتب رسالتك هنا..." />
+        <button id="chatbot-send">إرسال</button>
       </div>
     </div>
   `;
+  document.body.appendChild(container);
 
-  document.body.appendChild(widgetContainer);
+  const btn = document.getElementById("chatbot-btn");
+  const box = document.getElementById("chatbot-box");
+  const closeBtn = document.getElementById("chatbot-close");
+  const sendBtn = document.getElementById("chatbot-send");
+  const input = document.getElementById("chatbot-input");
+  const messages = document.getElementById("chatbot-messages");
 
-  const btn = document.getElementById('ai-chat-button');
-  const box = document.getElementById('ai-chat-box');
-  const closeBtn = document.getElementById('ai-chat-close');
-  const sendBtn = document.getElementById('ai-chat-send');
-  const input = document.getElementById('ai-chat-input');
-  const messagesDiv = document.getElementById('ai-chat-messages');
+  btn.onclick = () => box.style.display = "flex";
+  closeBtn.onclick = () => box.style.display = "none";
 
-  btn.onclick = () => {
-    box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
-  };
-  closeBtn.onclick = () => box.style.display = 'none';
-
-  async function sendMessage() {
+  async function handleSend() {
     const text = input.value.trim();
     if (!text) return;
 
-    messagesDiv.innerHTML += `<div class="ai-msg user">${text}</div>`;
-    input.value = '';
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'ai-msg bot';
-    loadingDiv.innerText = 'جاري التفكير...';
-    messagesDiv.appendChild(loadingDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    // إظهار رسالة المستخدم
+    messages.innerHTML += `<div class="chat-msg user-msg">${text}</div>`;
+    input.value = "";
+    messages.scrollTop = messages.scrollHeight;
 
     try {
-    // بدلاً من رابط Railway الكامل، استخدم هذا المسار فقط:
-// 1. قراءة اسم العميل تلقائياً من رابط الصفحة
-const urlParams = new URLSearchParams(window.location.search);
-const clientId = urlParams.get('client') || 'default';
+      // قراءة الـ client من الرابط بوضوح
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientId = urlParams.get('client') || 'default';
 
-// 2. إرسال اسم العميل مع النص إلى السيرفر
-const res = await fetch('/api/chat', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
-    message: text,
-    clientId: clientId 
-  })
-});
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: text,
+          clientId: clientId 
+        })
+      });
+
       const data = await res.json();
-      loadingDiv.innerText = data.reply || 'حدث خطأ في الرد.';
+      const reply = data.reply || "عذراً، حدث خطأ في الرد.";
+
+      messages.innerHTML += `<div class="chat-msg bot-msg">${reply}</div>`;
+      messages.scrollTop = messages.scrollHeight;
     } catch (err) {
-      loadingDiv.innerText = 'تعذر الاتصال بالسيرفر.';
+      messages.innerHTML += `<div class="chat-msg bot-msg">عذراً، تعذر الاتصال بالسيرفر.</div>`;
     }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  sendBtn.onclick = sendMessage;
-  input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
-});
+  sendBtn.onclick = handleSend;
+  input.onkeypress = (e) => {
+    if (e.key === 'Enter') handleSend();
+  };
+})();

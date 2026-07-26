@@ -1,31 +1,51 @@
-require('dotenv').config();
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
 const Groq = require('groq-sdk');
 
 const app = express();
 
-// إعداد CORS شامل
+// إعدادات CORS للسماح لأي متصفح بالاتصال
 app.use(cors());
-
 app.use(express.json());
 
-// تقديم جميع ملفات مجلد public (بما فيها index.html و chatbot.js)
-app.use(express.static(path.join(__dirname, 'public')));
+// قاعدة بيانات العملاء وتوجيهات البوت لكل عميل
+const clientsData = {
+  "marrakech_restaurant": {
+    name: "مطعم البركة المغربي",
+    prompt: `أنت مساعد ذكي ولطيف لمطعم "البركة" للمأكولات المغربية الأصيلة في مراكش.
+معلومات المطعم:
+- قائمة الطعام: طاجين دجاج بالحامض (50 درهم)، طاجين لحم بالبرقوق (65 درهم)، كسكس خضار أو لحم (60 درهم)، حريرة وشهيوات مغربية.
+- أوقات العمل: يومياً من الساعة 12:00 ظهراً حتى 11:00 ليلاً.
+- العنوان: مراكش، قرب جامع الفنا.
+- التوصيل: متوفر داخل مراكش عبر الهاتف.
+جاوب الزبناء برحابة صدر وبلغة مغربية بسيطة ومفهومة أو بالعربية الفصحى حسب لغة الزبون.`
+  }
+};
 
-const apiKey = process.env.GROQ_API_KEY;
-const groq = new Groq({ apiKey: apiKey || 'dummy_key' });
+// تهيئة عميل Groq (تأكد أن مفتاح الـ API مضبوط في متغيرات البيئة في Railway)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// مسار المحادثة
+// مسار استقبال رسائل الشات
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ error: "الرسالة مطلوبة" });
+    const { message, clientId } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "الرسالة مطلوبة" });
+    }
+
+    // طباعة معرف العميل في لوحة تحكم Railway للتأكد
+    console.log("Received request for client ID:", clientId);
+
+    // جلب توجيهات العميل المحدد أو توجيه افتراضي عام
+    const client = clientsData[clientId];
+    const systemPrompt = client 
+      ? client.prompt 
+      : "أنت مساعد ذكي ومفيد ومصمم لمساعدة المستخدمين.";
 
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: "system", content: "أنت مساعد ذكي ومفيد." },
+        { role: "system", content: systemPrompt },
         { role: "user", content: message }
       ],
       model: "llama-3.3-70b-versatile",
@@ -39,12 +59,8 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// إرجاع صفحة index.html لأي مسار آخر
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
+// تشغيل السيرفر محلياً (إذا لم يكن على Railway)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -1,5 +1,25 @@
-// إنشاء وتصميم نافذة الشات في الصفحة تلقائياً
-(function () {
+(async function () {
+  // 1. استخراج معرف العميل من رابط السكربت في موقع العميل
+  const scriptTag = document.currentScript || document.querySelector('script[src*="chatbot.js"]');
+  let clientId = 'default';
+  if (scriptTag) {
+    const urlParams = new URLSearchParams(new URL(scriptTag.src).search);
+    if (urlParams.get('client')) {
+      clientId = urlParams.get('client');
+    }
+  }
+
+  // 2. جلب إعدادات التصميم الخاصة بهذا العميل حصرياً من السيرفر
+  let config = { name: "المساعد الذكي", color: "#007bff", icon: "💬" };
+  try {
+    const res = await fetch(`https://chatbot-widget-production-fa1d.up.railway.app/api/config?client=${clientId}`);
+    const data = await res.json();
+    if (data) config = data;
+  } catch (e) {
+    console.error("Failed to load bot config");
+  }
+
+  // 3. حقن التصاميم والألوان الخاصة بالعميل في الصفحة
   const styles = `
     #chatbot-container {
       position: fixed;
@@ -10,7 +30,7 @@
       direction: rtl;
     }
     #chatbot-btn {
-      background-color: #007bff;
+      background-color: ${config.color};
       color: white;
       border: none;
       border-radius: 50px;
@@ -33,7 +53,7 @@
       right: 0;
     }
     #chatbot-header {
-      background: #007bff;
+      background: ${config.color};
       color: white;
       padding: 10px;
       display: flex;
@@ -63,7 +83,7 @@
       line-height: 1.4;
     }
     .user-msg {
-      background: #007bff;
+      background: ${config.color};
       color: white;
       align-self: flex-end;
     }
@@ -86,7 +106,7 @@
       outline: none;
     }
     #chatbot-send {
-      background: #007bff;
+      background: ${config.color};
       color: white;
       border: none;
       padding: 6px 12px;
@@ -103,14 +123,14 @@
   const container = document.createElement("div");
   container.id = "chatbot-container";
   container.innerHTML = `
-    <button id="chatbot-btn">💬 المساعد الذكي</button>
+    <button id="chatbot-btn">${config.icon} ${config.name}</button>
     <div id="chatbot-box">
       <div id="chatbot-header">
-        <span>المساعد الذكي</span>
+        <span>${config.name}</span>
         <button id="chatbot-close">✕</button>
       </div>
       <div id="chatbot-messages">
-        <div class="chat-msg bot-msg">مرحباً بك! كيف يمكنني مساعدتك اليوم؟</div>
+        <div class="chat-msg bot-msg">مرحباً بك في ${config.name}! كيف يمكنني خدمتك اليوم؟</div>
       </div>
       <div id="chatbot-input-area">
         <input type="text" id="chatbot-input" placeholder="اكتب رسالتك هنا..." />
@@ -139,17 +159,6 @@
     messages.scrollTop = messages.scrollHeight;
 
     try {
-      // استخراج معرّف العميل تلقائياً من رابط السكربت الذي وضعه العميل في موقعه
-      const scriptTag = document.currentScript || document.querySelector('script[src*="chatbot.js"]');
-      let clientId = 'default';
-      if (scriptTag) {
-        const urlParams = new URLSearchParams(new URL(scriptTag.src).search);
-        if (urlParams.get('client')) {
-          clientId = urlParams.get('client');
-        }
-      }
-
-      // الاتصال بسيرفر Railway مع إرسال معرّف هذا العميل بالذات
       const res = await fetch('https://chatbot-widget-production-fa1d.up.railway.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

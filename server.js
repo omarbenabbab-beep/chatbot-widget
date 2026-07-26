@@ -8,7 +8,7 @@ const app = express();
 // إعدادات CORS للسماح لأي متصفح بالاتصال
 app.use(cors());
 app.use(express.json());
-
+app.use(express.static('public'));
 // تهيئة عميل Groq (تأكد أن مفتاح الـ API مضبوط في متغيرات البيئة في Railway)
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 

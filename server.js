@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const Groq = require('groq-sdk');
 
 const app = express();
@@ -8,22 +9,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// قاعدة بيانات العملاء وتوجيهات البوت لكل عميل
-const clientsData = {
-  "marrakech_restaurant": {
-    name: "مطعم البركة المغربي",
-    prompt: `أنت مساعد ذكي ولطيف لمطعم "البركة" للمأكولات المغربية الأصيلة في مراكش.
-معلومات المطعم:
-- قائمة الطعام: طاجين دجاج بالحامض (50 درهم)، طاجين لحم بالبرقوق (65 درهم)، كسكس خضار أو لحم (60 درهم)، حريرة وشهيوات مغربية.
-- أوقات العمل: يومياً من الساعة 12:00 ظهراً حتى 11:00 ليلاً.
-- العنوان: مراكش، قرب جامع الفنا.
-- التوصيل: متوفر داخل مراكش عبر الهاتف.
-جاوب الزبناء برحابة صدر وبلغة مغربية بسيطة ومفهومة أو بالعربية الفصحى حسب لغة الزبون.`
-  }
-};
-
 // تهيئة عميل Groq (تأكد أن مفتاح الـ API مضبوط في متغيرات البيئة في Railway)
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// دالة لقراءة بيانات العملاء بمرونة من ملف clients.json الخارجي
+function getClientsData() {
+  try {
+    if (fs.existsSync('clients.json')) {
+      const data = fs.readFileSync('clients.json', 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error("Error reading clients.json", err);
+  }
+  return {};
+}
 
 // مسار استقبال رسائل الشات
 app.post('/api/chat', async (req, res) => {
@@ -34,14 +34,21 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: "الرسالة مطلوبة" });
     }
 
+    // جلب أحدث بيانات العملاء من ملف clients.json
+    const clientsData = getClientsData();
+    const client = clientsData[clientId];
+
+    // التحقق مما إذا كان العميل غير موجود أو تم إيقاف حسابه (active: false)
+    if (!client || client.active === false) {
+      return res.json({ 
+        reply: "عذراً، هذه الخدمة متوقفة مؤقتاً أو انتهت صلاحية الاشتراك. يرجى التواصل مع الإدارة." 
+      });
+    }
+
     // طباعة معرف العميل في لوحة تحكم Railway للتأكد
     console.log("Received request for client ID:", clientId);
 
-    // جلب توجيهات العميل المحدد أو توجيه افتراضي عام
-    const client = clientsData[clientId];
-    const systemPrompt = client 
-      ? client.prompt 
-      : "أنت مساعد ذكي ومفيد ومصمم لمساعدة المستخدمين.";
+    const systemPrompt = client.prompt || "أنت مساعد ذكي ومفيد.";
 
     const completion = await groq.chat.completions.create({
       messages: [
@@ -59,7 +66,7 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// تشغيل السيرفر محلياً (إذا لم يكن على Railway)
+// تشغيل السيرفر
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

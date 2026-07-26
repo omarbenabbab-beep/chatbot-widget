@@ -4,12 +4,22 @@ const cors = require('cors');
 const Groq = require('groq-sdk');
 
 const app = express();
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 app.use(cors());
 app.use(express.json());
 
-// مسار الشات
+// التأكد من وجود المفتاح
+const apiKey = process.env.GROQ_API_KEY;
+if (!apiKey) {
+  console.error("WARNING: GROQ_API_KEY is missing!");
+}
+
+const groq = new Groq({ apiKey: apiKey || 'dummy_key' });
+
+app.get('/', (req, res) => {
+  res.send('Server is running successfully!');
+});
+
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
@@ -23,16 +33,16 @@ app.post('/api/chat', async (req, res) => {
       model: "llama-3.3-70b-versatile",
     });
 
-    const reply = completion.choices[0]?.message?.content || "عذراً، حدث خطأ.";
+    const reply = completion.choices[0]?.message?.content || "لا توجد إجابة.";
     res.json({ reply });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "خطأ في السيرفر" });
+    console.error("API Error:", error);
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
-// تشغيل السيرفر عادي جداً
+// المنفذ الصحيح لـ Railway
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
 });

@@ -8,7 +8,6 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
 // مسار استقبال الرسائل
 app.post('/api/chat', async (req, res) => {
@@ -36,17 +35,4 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-// تشغيل السيرفر محلياً فقط أثناء التطوير
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-}
-
-// تصدير التطبيق ليعمل على Vercel
 module.exports = app;

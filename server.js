@@ -5,10 +5,15 @@ const Groq = require('groq-sdk');
 
 const app = express();
 
-app.use(cors());
+// إعداد CORS للسماح بالطلبات من أي مكان وبجميع الوسائل
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
-// التأكد من وجود المفتاح
 const apiKey = process.env.GROQ_API_KEY;
 if (!apiKey) {
   console.error("WARNING: GROQ_API_KEY is missing!");
@@ -41,7 +46,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// المنفذ الصحيح لـ Railway
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);

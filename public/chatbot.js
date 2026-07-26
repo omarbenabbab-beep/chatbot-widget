@@ -142,11 +142,13 @@ window.addEventListener('DOMContentLoaded', () => {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
+     const res = await fetch('https://chatbot-widget-production-11cf.up.railway.app/api/chat', {
+  method: 'POST',
+  headers: { 
+    'Content-Type': 'application/json' 
+  },
+  body: JSON.stringify({ message: text }) // أو userInput حسب اسم المتغير لديك
+});
       const data = await res.json();
       loadingDiv.innerText = data.reply || 'حدث خطأ في الرد.';
     } catch (err) {

@@ -116,7 +116,7 @@
         <input type="text" id="chatbot-input" placeholder="اكتب رسالتك هنا..." />
         <button id="chatbot-send">إرسال</button>
       </div>
-  </div>
+    </div>
   `;
   document.body.appendChild(container);
 
@@ -134,15 +134,22 @@
     const text = input.value.trim();
     if (!text) return;
 
-    // إظهار رسالة المستخدم
     messages.innerHTML += `<div class="chat-msg user-msg">${text}</div>`;
     input.value = "";
     messages.scrollTop = messages.scrollHeight;
 
     try {
-      const clientId = 'marrakech_restaurant';
-      
-      // الاتصال المباشر بسيرفر Railway
+      // استخراج معرّف العميل تلقائياً من رابط السكربت الذي وضعه العميل في موقعه
+      const scriptTag = document.currentScript || document.querySelector('script[src*="chatbot.js"]');
+      let clientId = 'default';
+      if (scriptTag) {
+        const urlParams = new URLSearchParams(new URL(scriptTag.src).search);
+        if (urlParams.get('client')) {
+          clientId = urlParams.get('client');
+        }
+      }
+
+      // الاتصال بسيرفر Railway مع إرسال معرّف هذا العميل بالذات
       const res = await fetch('https://chatbot-widget-production-fa1d.up.railway.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

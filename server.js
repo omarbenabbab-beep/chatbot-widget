@@ -1,42 +1,27 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const Groq = require('groq-sdk');
 
 const app = express();
 
-// إعداد CORS يدوي شامل لتجاوز أية قيود من المتصفح
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  // الاستجابة الفورية لطلبات التثبت (Preflight requests)
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// إعداد CORS شامل
+app.use(cors());
 
 app.use(express.json());
 
-const apiKey = process.env.GROQ_API_KEY;
-if (!apiKey) {
-  console.error("WARNING: GROQ_API_KEY is missing!");
-}
+// تقديم جميع ملفات مجلد public (بما فيها index.html و chatbot.js)
+app.use(express.static(path.join(__dirname, 'public')));
 
+const apiKey = process.env.GROQ_API_KEY;
 const groq = new Groq({ apiKey: apiKey || 'dummy_key' });
 
-app.get('/', (req, res) => {
-  res.send('Server is running successfully!');
-});
-
+// مسار المحادثة
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "الرسالة مطلوبة" });
-    }
+    if (!message) return res.status(400).json({ error: "الرسالة مطلوبة" });
 
     const completion = await groq.chat.completions.create({
       messages: [
@@ -52,6 +37,11 @@ app.post('/api/chat', async (req, res) => {
     console.error("API Error:", error);
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
+});
+
+// إرجاع صفحة index.html لأي مسار آخر
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;

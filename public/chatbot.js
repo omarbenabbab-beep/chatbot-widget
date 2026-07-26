@@ -143,10 +143,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
     try {
     // بدلاً من رابط Railway الكامل، استخدم هذا المسار فقط:
+// 1. قراءة اسم العميل تلقائياً من رابط الصفحة
+const urlParams = new URLSearchParams(window.location.search);
+const clientId = urlParams.get('client') || 'default';
+
+// 2. إرسال اسم العميل مع النص إلى السيرفر
 const res = await fetch('/api/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ message: text })
+  body: JSON.stringify({ 
+    message: text,
+    clientId: clientId 
+  })
 });
       const data = await res.json();
       loadingDiv.innerText = data.reply || 'حدث خطأ في الرد.';
